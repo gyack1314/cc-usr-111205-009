@@ -1,11 +1,26 @@
-"""显示已有原始资料摘要。"""
+"""命令行：inspect 输出原始资料概况，analyze 输出偏好敏感性分析。"""
 import argparse
 import json
-from .io import load
+
 from .domain import summarize
+from .io import load
+from .polyhedron import Problem
+from .sensitivity import analyze
+
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('command',choices=['inspect']);p.add_argument('file');a=p.parse_args()
-    v,digest=load(a.file)
-    print(json.dumps({'source_sha256':digest,'summary':summarize(v)},ensure_ascii=False,indent=2,allow_nan=False))
-if __name__=='__main__':main()
+    p = argparse.ArgumentParser(description="权重多面体稳健排序与偏好敏感性分析")
+    p.add_argument("command", choices=["inspect", "analyze"])
+    p.add_argument("file")
+    a = p.parse_args()
+    v, digest = load(a.file)
+    if a.command == "inspect":
+        out = {"source_sha256": digest, "summary": summarize(v)}
+    else:
+        problem = Problem(v)
+        out = {"source_sha256": digest, "analysis": analyze(problem)}
+    print(json.dumps(out, ensure_ascii=False, indent=2, allow_nan=False))
+
+
+if __name__ == "__main__":
+    main()
